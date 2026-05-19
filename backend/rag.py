@@ -9,35 +9,46 @@ from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer
 from typing import Optional, List
 
-RAG_URL = "https://en.wikipedia.org/wiki/Certificate_of_deposit"
+RAG_URL = "https://en.wikipedia.org/wiki/Musical_instrument"
 CHUNK_SIZE = 600
 CHUNK_OVERLAP = 60
 TOP_K = 3
 EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 FALLBACK_TEXT = """
-A certificate of deposit (CD) is a time deposit sold by banks, thrift institutions, and credit unions.
-CDs are similar to savings accounts in that they are insured "money in the bank" and thus virtually risk-free.
-They differ from savings accounts in that the CD has a specific, fixed term (often three months, six months,
-or one to five years) and usually a fixed interest rate. The bank expects the CD to be held until maturity,
-at which time the funds can be withdrawn together with accrued interest.
+A musical instrument is a device created or adapted to make musical sounds. In principle, any object that
+produces sound can be considered a musical instrument. The history of musical instruments dates to the
+beginnings of human culture. Early musical instruments may have been used for rituals and communication.
 
-In exchange for the customer depositing the money for an agreed term, institutions usually offer higher
-interest rates than they do on accounts from which customers may withdraw on demand. The customer must
-understand that the penalty for early withdrawal could be high.
+Musical instruments are classified into families based on how they produce sound:
+- String instruments (chordophones): guitar, violin, piano, harp, bass. Sound is produced by vibrating strings.
+- Wind instruments (aerophones): flute, saxophone, trumpet, clarinet, trombone. Sound is produced by vibrating air.
+- Percussion instruments (membranophones and idiophones): drums, xylophone, cymbals, marimba. Sound is produced by striking.
+- Electronic instruments (electrophones): synthesizer, theremin, electric guitar. Sound is produced electronically.
 
-CDs are available in various terms from 1 month to 10 years. The interest rate is typically fixed for
-the term of the CD. Some CDs have variable rates or rates tied to an index such as the stock market.
-CDs are generally issued by commercial banks and are insured by the FDIC up to $250,000 per depositor.
+The guitar is a fretted string instrument with six strings. Standard tuning is EADGBE. It is used in virtually
+all genres including rock, pop, jazz, classical, and blues. The acoustic guitar produces sound through a hollow
+resonating body, while the electric guitar uses pickups and requires amplification.
 
-In Colombia, CDs are known as CDTs (Certificados de Depósito a Término). Colombian CDTs are issued by
-banks and financial institutions, offering fixed interest rates for terms typically ranging from 30 to
-360 days, though longer terms are available. The minimum investment amount varies by institution but
-typically starts around $500,000 COP.
+The piano is a keyboard instrument with 88 keys. When a key is pressed, a felt hammer strikes tuned strings.
+Invented around 1700 by Bartolomeo Cristofori, it is one of the most versatile instruments, capable of playing
+melody, harmony, and bass simultaneously. It is central to classical music, jazz, and popular music.
 
-CDTs in Colombia are considered low-risk investments. The interest earned is subject to withholding tax
-(retención en la fuente). Rates vary based on the term length, the amount invested, and market conditions.
-As of recent data, CDT rates in Colombia range from 8% to 12% annually depending on the term and institution.
+The violin is a bowed string instrument with four strings tuned in perfect fifths (GDAE). It is the smallest
+and highest-pitched instrument in the violin family, which also includes viola, cello, and double bass.
+It is essential in classical orchestras and widely used in folk, jazz, and contemporary music.
+
+A440 (A4 = 440 Hz) is the international standard tuning pitch adopted as ISO 16. Most modern orchestras and
+instruments tune to this reference frequency. Historically, tuning standards varied significantly, from as
+low as 415 Hz in Baroque period to 466 Hz in some modern European orchestras.
+
+Drums are percussion instruments that provide the rhythmic foundation in most music. A standard drum kit
+includes bass drum, snare, hi-hat, toms, and cymbals. The bass guitar (4 strings, EADG tuning one octave
+below guitar) bridges rhythm and harmony, essential in funk, rock, and pop.
+
+The flute is a woodwind instrument that produces sound from the flow of air across an opening. The saxophone
+is a single-reed woodwind with a conical brass body, invented in the 1840s by Adolphe Sax, prominent in jazz.
+The trumpet is a brass instrument with the highest register in its family, using three piston valves.
 """
 
 _model = SentenceTransformer(EMBEDDING_MODEL)

@@ -222,9 +222,9 @@ function App() {
     <div className="chat-container">
       <header className="chat-header">
         <h1>
-          <span className="logo">FinBot</span>
+          <span className="logo">SoundBot</span>
         </h1>
-        <p>Asistente financiero · Colombia & USA</p>
+        <p>Music & Instruments Assistant · Colombia & USA</p>
       </header>
 
       <div className="mode-bar">
@@ -263,15 +263,15 @@ function App() {
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="welcome">
-            <p>Bienvenido a FinBot. ¿En qué puedo ayudarle hoy?</p>
-            <p>Welcome to FinBot. How can I help you today?</p>
+            <p>Bienvenido a SoundBot. Ask me about instruments, tuning, or music theory.</p>
+            <p>Welcome to SoundBot. Preguntame sobre instrumentos, afinacion o teoria musical.</p>
           </div>
         )}
 
         {messages.map((msg, i) => (
           <div key={i} className={`message ${msg.role}`}>
             <div className="message-role">
-              {msg.role === "user" ? "Tú" : "FinBot"}
+              {msg.role === "user" ? "Tu" : "SoundBot"}
             </div>
             {msg.image_preview && (
               <img
@@ -298,7 +298,7 @@ function App() {
 
         {loading && (
           <div className="message assistant">
-            <div className="message-role">FinBot</div>
+            <div className="message-role">SoundBot</div>
             <div className="message-content typing">Escribiendo...</div>
           </div>
         )}

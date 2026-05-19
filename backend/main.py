@@ -14,7 +14,7 @@ from rag import get_rag_status, reset_rag
 from tools import ingest_rag_url
 from cache import get_cache_size, reset_cache
 
-app = FastAPI(title="FinBot API")
+app = FastAPI(title="SoundBot API")
 
 app.add_middleware(
     CORSMiddleware,

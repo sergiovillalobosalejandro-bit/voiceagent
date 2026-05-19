@@ -44,22 +44,22 @@ GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 GROQ_TEXT_MODEL = os.getenv("GROQ_TEXT_MODEL", "llama-3.3-70b-versatile")
 GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 
-SYSTEM_PROMPT = """You are FinBot, the virtual assistant for FinBot, a fintech company operating in Colombia and the United States.
+SYSTEM_PROMPT = """You are SoundBot, the virtual assistant for SoundBot, a music and instruments company operating in Colombia and the United States.
 
 Your personality and rules:
-- Always maintain a formal, professional, and courteous financial tone.
-- Your domain is strictly limited to: personal finance, FinBot products and services, and customer support related to financial matters.
+- Always maintain a friendly, passionate, and knowledgeable musical tone.
+- Your domain is strictly limited to: music theory, musical instruments, instrument maintenance, music history, genres, composition, audio analysis, instrument identification, and music education.
 - Always detect the language of each user message and respond in that same language. If the user writes in Spanish, respond in Spanish. If the user writes in English, respond in English. Never ask the user to specify their language.
 - If the user switches language mid-conversation, switch to the new language in your next response.
 - If the user mixes Spanish and English in the same message, default to the dominant language (the one used most).
-- When a user asks something outside the financial domain (e.g., sports, entertainment, politics, cooking, weather, general trivia), politely decline to answer. Explain that you can only assist with financial topics, FinBot products, or support inquiries. Always decline in the user's active language.
-- Be concise and helpful. Do not hallucinate product details you are not certain about.
+- When a user asks something outside the music and instruments domain (e.g., finance, sports, politics, cooking, weather, general trivia), politely decline to answer. Explain that you can only assist with music topics, instruments, or music education. Always decline in the user's active language.
+- Be concise and helpful. Do not hallucinate instrument details you are not certain about.
 - You may answer in either Spanish or English depending on the user's language.
-- When a user asks a question that requires current data (exchange rates, cryptocurrency prices) or calculations, use the available tools. Never fabricate numbers.
-- When using a tool, integrate the result naturally into your response. Always mention the source when using get_usd_rate or get_crypto_price.
-- You can analyze images (receipts, invoices, financial documents, charts). Describe what you see and extract relevant financial information from the image.
+- When a user asks a question that requires factual data (instrument specifications, tuning frequencies, instrument history) use the available tools. Never fabricate technical details.
+- When using a tool, integrate the result naturally into your response. Always mention the source when using instrument_info or get_tuning_frequency.
+- You can analyze images (instruments, sheet music, gear, audio equipment). Identify instruments, describe what you see, and extract relevant musical information from the image.
 
-Remember: you serve clients in both Colombia (Spanish-speaking) and the United States (English-speaking)."""
+Remember: you serve musicians and music enthusiasts in both Colombia (Spanish-speaking) and the United States (English-speaking)."""
 
 MAX_MEMORY = 7
 MAX_TOOL_ITERATIONS = 3
@@ -81,13 +81,14 @@ QUESTION_PREFIXES = (
 REALTIME_CACHE_BYPASS_PATTERNS = [
     re.compile(pattern, re.IGNORECASE)
     for pattern in (
-        r"\b(usd|cop|eur|rate|exchange|tipo de cambio|trm|d[oó]lar)\b",
-        r"\b(bitcoin|btc|ethereum|eth|crypto|cripto|precio hoy|price today)\b",
+        r"\b(precio|price|cost|compra|buy|valor|value)\b",
+        r"\b(tuning|tune|frequency|frecuencia|hz|afinaci[oó]n)\b",
     )
 ]
 
-CRYPTO_KEYWORDS = (
-    "bitcoin", "btc", "ethereum", "eth", "crypto", "criptomoneda", "cripto",
+MUSIC_LOOKUP_KEYWORDS = (
+    "afinacion", "tuning", "frecuencia", "frequency",
+    "instrumento", "instrument",
 )
 
 
@@ -133,47 +134,38 @@ def is_cacheable_query(user_message: str) -> bool:
     return has_question_mark or starts_with_question_prefix
 
 
-def should_force_crypto_tool(user_message: str) -> bool:
+def should_force_music_lookup(user_message: str) -> bool:
     normalized = _normalize_text(user_message)
-    return any(token in normalized for token in CRYPTO_KEYWORDS)
+    return any(token in normalized for token in MUSIC_LOOKUP_KEYWORDS)
 
 
-def detect_crypto_id(user_message: str) -> str:
+def detect_instrument_name(user_message: str) -> str:
     normalized = _normalize_text(user_message)
-    if "ethereum" in normalized or " eth " in f" {normalized} ":
-        return "ethereum"
-    return "bitcoin"
+    instruments = ["guitar", "guitarra", "piano", "violin", "bass", "bajo",
+                   "drums", "bateria", "flute", "flauta", "saxophone", "saxofon",
+                   "trumpet", "trompeta", "cello", "violonchelo", "harp", "arpa"]
+    for inst in instruments:
+        if inst in normalized:
+            return inst
+    return "guitar"
 
 
-def format_crypto_answer(tool_result: dict, crypto_id: str, language: str) -> str:
-    price = None
-    currency = "usd"
-
-    if isinstance(tool_result, dict):
-        nested = tool_result.get(crypto_id)
-        if isinstance(nested, dict):
-            if "usd" in nested:
-                price = nested["usd"]
-                currency = "usd"
-            elif nested:
-                first_currency = next(iter(nested.keys()))
-                price = nested[first_currency]
-                currency = first_currency
-        elif "price" in tool_result:
-            price = tool_result.get("price")
-            currency = str(tool_result.get("currency", "usd")).lower()
-
-    if price is None:
-        if language == "en":
-            return "I could not retrieve the cryptocurrency price at this moment. Please try again."
-        return "No pude obtener el precio de la criptomoneda en este momento. Por favor intenta de nuevo."
-
-    coin_label = crypto_id.upper()
-    currency_label = currency.upper()
-
+def format_music_answer(tool_result: dict, instrument: str, language: str) -> str:
+    info = tool_result.get("info", tool_result.get("description", str(tool_result)))
+    tuning = tool_result.get("tuning", tool_result.get("standard_tuning", ""))
+    
     if language == "en":
-        return f"The current {coin_label} price is {price} {currency_label}, based on CoinGecko data."
-    return f"El precio actual de {coin_label} es {price} {currency_label}, con datos de CoinGecko."
+        parts = [f"Here is what I found about the {instrument}:"]
+        if tuning:
+            parts.append(f"Standard tuning: {tuning}")
+        parts.append(str(info))
+        return " ".join(parts)
+    
+    parts = [f"Esto es lo que encontre sobre {instrument}:"]
+    if tuning:
+        parts.append(f"Afinacion estandar: {tuning}")
+    parts.append(str(info))
+    return " ".join(parts)
 
 
 def estimate_dominant_language(text: str) -> str:
@@ -187,7 +179,7 @@ def estimate_dominant_language(text: str) -> str:
 
     es_pattern = re.compile(r'[áéíóúüñ]', re.IGNORECASE)
     en_indicators = re.compile(
-        r'\b(the|is|are|was|were|have|has|had|will|would|can|could|should|may|might|do|does|did|what|when|where|which|who|how|why|this|that|these|those|and|but|or|of|in|on|at|to|for|with|from|by|about|than|it|its|not|no|yes|please|thanks|hello|hi|good|morning|afternoon|evening|rate|price|exchange|dollar|currency|investment|bank|account|transfer|payment|balance|credit|debit|loan|mortgage|tax|taxes|budget|savings|interest|stock|market|crypto|bitcoin|ethereum|wallet|transaction|fee|fees)\b',
+        r'\b(the|is|are|was|were|have|has|had|will|would|can|could|should|may|might|do|does|did|what|when|where|which|who|how|why|this|that|these|those|and|but|or|of|in|on|at|to|for|with|from|by|about|than|it|its|not|no|yes|please|thanks|hello|hi|good|morning|afternoon|evening|music|musical|instrument|guitar|piano|violin|drums|bass|tuning|chord|scale|note|melody|rhythm|beat|song|sound|tone|key|tempo|genre|harmony|frequency|string|pick|amp|amplifier|pedal|effects|concert|orchestra|band)\b',
         re.IGNORECASE
     )
 
@@ -214,15 +206,15 @@ def chat(session_id: str, user_message: str, image_base64: Optional[str] = None)
 
     add_to_memory(session_id, "user", user_message)
 
-    if not image_base64 and should_force_crypto_tool(normalized_message):
-        crypto_id = detect_crypto_id(normalized_message)
+    if not image_base64 and should_force_music_lookup(normalized_message):
+        instrument = detect_instrument_name(normalized_message)
         tool_result = execute_tool(
-            "get_crypto_price",
-            {"crypto_id": crypto_id, "vs_currency": "usd"},
+            "instrument_info",
+            {"instrument_name": instrument},
         )
-        assistant_message = format_crypto_answer(tool_result, crypto_id, language)
+        assistant_message = format_music_answer(tool_result, instrument, language)
         add_to_memory(session_id, "assistant", assistant_message)
-        return assistant_message, language, "get_crypto_price", False
+        return assistant_message, language, "instrument_info", False
 
     if can_use_cache:
         cached = check_cache(normalized_message)

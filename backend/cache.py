@@ -12,24 +12,24 @@ _model = SentenceTransformer(EMBEDDING_MODEL)
 
 FAQ_ENTRIES = [
     {
-        "question": "¿Cuál es el horario de atención de FinBot?",
-        "answer": "Nuestro horario de atención es de lunes a viernes de 8:00 a.m. a 6:00 p.m. y sábados de 9:00 a.m. a 1:00 p.m., hora colombiana. Para clientes en Estados Unidos, ofrecemos soporte telefónico 24/7.",
+        "question": "What is the standard tuning for a guitar?",
+        "answer": "The standard tuning for a six-string guitar is E2 A2 D3 G3 B3 E4, from the lowest (thickest) string to the highest (thinnest). This is also known as EADGBE tuning. Alternate tunings like Drop D (DADGBE), Open G (DGDGBD), and DADGAD are popular in specific genres.",
     },
     {
-        "question": "¿Cómo puedo abrir una cuenta en FinBot?",
-        "answer": "Para abrir una cuenta en FinBot, descargue nuestra app, complete el formulario con sus datos personales, verifique su identidad con su documento oficial y realice un depósito inicial mínimo de $50,000 COP o $10 USD.",
+        "question": "How many keys does a piano have?",
+        "answer": "A standard full-size piano has 88 keys: 52 white keys and 36 black keys, spanning from A0 (27.5 Hz) to C8 (4186 Hz). Smaller keyboards may have 61 or 76 keys. Digital pianos and synthesizers come in various sizes from 25 to 88 keys.",
     },
     {
-        "question": "¿Qué documentos necesito para solicitar un préstamo?",
-        "answer": "Para solicitar un préstamo en FinBot necesita: documento de identidad vigente, comprobante de ingresos de los últimos 3 meses, extractos bancarios recientes y referencias personales o comerciales.",
+        "question": "What is the difference between acoustic and electric guitar?",
+        "answer": "An acoustic guitar produces sound through a hollow body that resonates when the strings vibrate. An electric guitar uses electromagnetic pickups to convert string vibrations into an electrical signal that needs to be amplified through a speaker. Electric guitars typically have thinner strings, a solid body, and allow effects like distortion and reverb. Acoustic guitars are self-contained, portable, and require no amplification.",
     },
     {
-        "question": "¿Cómo contacto al servicio de soporte de FinBot?",
-        "answer": "Puede contactar a nuestro equipo de soporte por chat en vivo en la app, correo a soporte@finbot.co, o llamando al +57 301 732 5327 en Colombia y al +1 (305) 555-0123 en Estados Unidos.",
+        "question": "What is A440 tuning?",
+        "answer": "A440 is the international standard tuning pitch where the A above middle C (A4) is tuned to 440 Hz. It was adopted as the ISO 16 standard in 1939. Most modern instruments and ensembles tune to A440, though historically tuning ranged from 415 Hz (Baroque period) to 466 Hz. Some European orchestras tune slightly higher, around 442-444 Hz.",
     },
     {
-        "question": "¿FinBot cobra comisiones por transferencias internacionales?",
-        "answer": "FinBot cobra una comisión del 1.5% por transferencias internacionales, con un mínimo de $5 USD. Las transferencias entre cuentas FinBot son gratuitas. Las transferencias locales en COP no tienen costo.",
+        "question": "How do I maintain my instrument?",
+        "answer": "Instrument maintenance depends on the type. For string instruments: change strings regularly (every 1-3 months), clean the fretboard and body, control humidity (40-60%). For brass instruments: clean the mouthpiece daily, oil valves weekly, bathe the instrument monthly. For woodwinds: swab after each use, oil keys, check pads. For pianos: tune every 6 months, control humidity, keep away from direct sunlight. Always store instruments in their case when not in use.",
     },
 ]
 

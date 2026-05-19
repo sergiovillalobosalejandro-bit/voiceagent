@@ -10,7 +10,7 @@ if (Test-Path $envFile) {
 }
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  FinBot - Starting Services" -ForegroundColor Cyan
+Write-Host "  SoundBot - Starting Services" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 Write-Host "[1/2] Starting backend on port 8000..." -ForegroundColor Yellow

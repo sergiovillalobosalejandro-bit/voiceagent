@@ -1,15 +1,15 @@
-# FinBot — Multimodal Conversational AI Agent
+# SoundBot — Multimodal Conversational AI Agent
 
-A web application integrating a conversational AI agent for a fintech operating in Colombia and the United States. Users interact with the agent by typing, speaking, or uploading images. The agent responds in text or voice and has access to real tools (function calling). The UI visually distinguishes when the agent uses a tool versus responding directly.
+A web application integrating a conversational AI agent for a music and instruments company operating in Colombia and the United States. Users interact with the agent by typing, speaking, or uploading images. The agent responds in text or voice and has access to real tools (function calling). The UI visually distinguishes when the agent uses a tool versus responding directly.
 
 ## Use Case
 
-FinBot is a virtual financial assistant that helps users with:
-- Compound interest calculations
-- USD/COP exchange rate queries
-- Cryptocurrency price lookups (via CoinGecko, no API key required)
-- Financial knowledge base queries (CDTs, CDs, savings and investment products)
-- Image analysis of receipts and financial documents
+SoundBot is a virtual music assistant that helps users with:
+- Instrument information and specifications (guitar, piano, violin, drums, bass, flute, saxophone, trumpet)
+- Tuning frequencies and music theory
+- Instrument identification from descriptions
+- Music knowledge base queries (music history, composers, genres, theory)
+- Image analysis of instruments, sheet music, and audio gear
 - Voice input and output
 
 ## Architecture
@@ -23,7 +23,7 @@ FinBot is a virtual financial assistant that helps users with:
 | Text-to-Speech | Microsoft Edge TTS (free, no API key) |
 | Vector Database | FAISS (in-memory) |
 | Embeddings | sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) |
-| Integration | n8n (optional, for webhook-based RAG ingestion and crypto pricing) |
+| Integration | n8n (optional, for webhook-based RAG ingestion) |
 
 ## Prerequisites
 
@@ -129,23 +129,23 @@ The agent has 4 registered tools and decides autonomously when to use each one:
 
 | Tool | Parameters | Description |
 |---|---|---|
-| `calculate_interest` | `principal` (number), `rate` (number), `years` (number) | Computes compound interest: amount = principal * (1 + rate/100)^years |
-| `get_usd_rate` | none | Returns the current USD/COP reference rate |
-| `get_crypto_price` | `crypto_id` (string), `vs_currency` (string) | Fetches live cryptocurrency price from CoinGecko free API |
-| `search_knowledge_base` | `query` (string) | Queries the RAG knowledge base (CDs, CDTs, financial products) |
+| `instrument_info` | `instrument_name` (string) | Returns detailed info about a musical instrument (tuning, family, range, description) |
+| `get_tuning_frequency` | none | Returns the international standard tuning pitch (A4 = 440 Hz) and its history |
+| `identify_instrument_from_description` | `description` (string) | Identifies a musical instrument from a text description |
+| `search_music_knowledge` | `query` (string) | Queries the RAG knowledge base (music theory, history, composers, genres) |
 
 ## Semantic Cache
 
 A two-tier semantic cache using cosine similarity on sentence embeddings (threshold: 0.90):
 
-- **Static**: 5 pre-seeded bilingual FAQ entries (business hours, account opening, loan documents, support contact, transfer fees)
+- **Static**: 5 pre-seeded bilingual FAQ entries (guitar tuning, piano keys, acoustic vs electric, A440 tuning, instrument maintenance)
 - **Dynamic**: Up to 20 entries grown at runtime, oldest evicted first (FIFO)
 
-Real-time data queries (exchange rates, crypto prices) bypass the cache automatically.
+Tuning/queries (instrument lookups, frequency queries) bypass the cache automatically.
 
 ## RAG (Retrieval-Augmented Generation)
 
-- **Default source**: Wikipedia — Certificate of Deposit
+- **Default source**: Wikipedia — Musical instrument
 - **Ingestion**: Scrape URL → sentence splitting → chunking (max 600 chars, 60-char overlap, minimum 3 chunks) → FAISS IndexFlatIP
 - **Retrieval**: Top 3 chunks returned per query
 - Additional URLs can be ingested via `POST /rag/ingest`
@@ -158,14 +158,14 @@ The agent maintains the last 7 messages (user + assistant pairs) per session. Se
 
 The agent's behavior is defined by a system prompt with the following instructions:
 
-1. **Identity**: FinBot, virtual assistant for a fintech in Colombia and the US
-2. **Tone**: Formal, professional, courteous financial tone
-3. **Domain restriction**: Strictly personal finance, products, and financial customer support. Politely declines out-of-domain queries
+1. **Identity**: SoundBot, virtual assistant for a music and instruments company in Colombia and the US
+2. **Tone**: Friendly, passionate, and knowledgeable musical tone
+3. **Domain restriction**: Strictly music theory, instruments, instrument maintenance, music history, genres, composition, and audio analysis. Politely declines out-of-domain queries
 4. **Bilingual**: Automatically detects input language (Spanish/English) and responds in the same language
-5. **No hallucination**: Must use tools for current data (exchange rates, crypto prices, calculations). Never fabricate numbers
-6. **Tool integration**: Integrate tool results naturally. Always cite the source for rate/crypto data
-7. **Vision**: Can analyze images (receipts, invoices, financial documents, charts)
-8. **Serving**: Both Colombia (Spanish-speaking) and US (English-speaking) clients
+5. **No hallucination**: Must use tools for instrument data, tuning frequencies, and knowledge queries. Never fabricate technical details
+6. **Tool integration**: Integrate tool results naturally. Always cite the source for instrument data
+7. **Vision**: Can analyze images (instruments, sheet music, gear, audio equipment). Identify instruments from images
+8. **Serving**: Both Colombia (Spanish-speaking) and US (English-speaking) musicians and music enthusiasts
 
 ## UI Features
 
@@ -181,7 +181,7 @@ Three exported workflows are provided in `n8n-workflows/`:
 
 | File | Purpose |
 |---|---|
-| `finbot-crypto-price.json` | CoinGecko API proxy webhook |
+| `finbot-crypto-price.json` | Music data API webhook (reusable template) |
 | `finbot-rag-ingest.json` | Web scraping and chunking webhook |
 | `finbot-tts.json` | TTS webhook (fallback, Edge TTS used directly in backend) |
 
