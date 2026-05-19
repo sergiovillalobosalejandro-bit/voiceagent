@@ -20,7 +20,7 @@ SoundBot is a virtual music assistant that helps users with:
 | Backend | FastAPI (Python 3.12) |
 | LLM Provider | Groq (llama-3.3-70b-versatile for text, llama-4-scout for vision) |
 | Speech-to-Text | Groq Whisper large-v3 |
-| Text-to-Speech | Microsoft Edge TTS (free, no API key) |
+| Text-to-Speech | Microsoft Edge TTS + gTTS fallback (free, no API key) |
 | Vector Database | FAISS (in-memory) |
 | Embeddings | sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2) |
 | Integration | n8n (optional, for webhook-based RAG ingestion) |
@@ -171,8 +171,8 @@ The agent's behavior is defined by a system prompt with the following instructio
 
 - **Input modes**: Text, Voice, Image+Text
 - **Output modes**: Text, Audio (TTS)
-- **Tool badge**: Purple indicator displayed when the agent activates a tool, persisted in chat history
-- **Cache badge**: Teal indicator displayed when the response comes from the semantic cache
+- **Tool badge**: Gold indicator displayed when the agent activates a tool, persisted in chat history
+- **Cache badge**: Green indicator displayed when the response comes from the semantic cache
 - **Voice**: Built-in audio recorder (WebM) and audio player for TTS responses
 
 ## n8n Workflows (Optional)
@@ -181,7 +181,7 @@ Three exported workflows are provided in `n8n-workflows/`:
 
 | File | Purpose |
 |---|---|
-| `finbot-crypto-price.json` | Music data API webhook (reusable template) |
+| `finbot-crypto-price.json` | Webhook template (reusable for external APIs) |
 | `finbot-rag-ingest.json` | Web scraping and chunking webhook |
 | `finbot-tts.json` | TTS webhook (fallback, Edge TTS used directly in backend) |
 
@@ -208,7 +208,7 @@ See `.env.example` for the full list:
 │   ├── tools.py              # Tool implementations and definitions
 │   ├── cache.py              # Semantic cache with sentence-transformers
 │   ├── rag.py                # RAG pipeline: scraping, chunking, FAISS
-│   ├── voice.py              # STT (Whisper) and TTS (Edge TTS)
+│   ├── voice.py              # STT (Whisper) and TTS (Edge TTS + gTTS fallback)
 │   ├── models.py             # Pydantic request/response models
 │   ├── validate_8_steps.py   # End-to-end integration test
 │   ├── requirements.txt
@@ -227,5 +227,16 @@ See `.env.example` for the full list:
 ├── docker-compose.yml
 ├── start.ps1                 # Windows startup script
 ├── .env.example
+├── railway.json              # Railway deployment config
+├── Dockerfile                # Root Dockerfile for cloud deployment
 └── README.md
+
+## Deployment
+
+| Layer | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | `https://frontend-ruddy-nine-54.vercel.app` |
+| Backend | Railway | `https://soundbot-backend-production.up.railway.app` |
+| Database (RAG) | Supabase + pgvector | `https://cgvlzbyrvyyzufuyjkgu.supabase.co` |
+| Source Code | GitHub | `https://github.com/sergiovillalobosalejandro-bit/voiceagent` |
 ```
