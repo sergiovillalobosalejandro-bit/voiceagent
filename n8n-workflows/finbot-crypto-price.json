@@ -1,0 +1,66 @@
+[
+  {
+    "id": "FnT8kMqR4sL5vWy1",
+    "name": "FinBot - Crypto Price (CoinGecko)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "crypto-price",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "a1b2c3d4-1111-4000-a000-000000000001",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [0, 0],
+        "webhookId": "finbot-crypto-webhook"
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.coingecko.com/api/v3/simple/price?ids={{ $json.coin_id || 'bitcoin' }}&vs_currencies={{ $json.currency || 'usd' }}",
+          "authentication": "none",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "id": "a1b2c3d4-2222-4000-a000-000000000002",
+        "name": "Fetch CoinGecko",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [220, 0]
+      },
+      {
+        "parameters": {
+          "jsCode": "const webhookData = $('Webhook').first().json;\nconst priceData = $input.first().json;\n\nreturn [{\n  json: {\n    coin_id: webhookData.coin_id || 'bitcoin',\n    currency: webhookData.currency || 'usd',\n    price: priceData\n  }\n}];"
+        },
+        "id": "a1b2c3d4-3333-4000-a000-000000000003",
+        "name": "Format Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [440, 0]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            { "node": "Fetch CoinGecko", "type": "main", "index": 0 }
+          ]
+        ]
+      },
+      "Fetch CoinGecko": {
+        "main": [
+          [
+            { "node": "Format Response", "type": "main", "index": 0 }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
+]

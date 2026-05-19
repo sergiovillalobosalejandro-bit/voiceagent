@@ -1,0 +1,44 @@
+[
+  {
+    "id": "FnT8kMqR4sL5vWy2",
+    "name": "FinBot - RAG Ingestion",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "rag-ingest",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "b1c2d3e4-1111-4000-b000-000000000001",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [0, 0],
+        "webhookId": "finbot-rag-webhook"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst first = items[0];\nconst body = first.json.body || first.json;\nconst url = body.url || first.json.url;\n\nif (!url) {\n  return [{ json: { status: 'error', message: 'No URL provided' } }];\n}\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'GET',\n    url: url,\n    returnFullResponse: true,\n    simple: false\n  });\n\n  const bodyText = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);\n\n  // Remove script, style, nav, footer, header content before extracting text\n  let cleaned = bodyText\n    .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, ' ')\n    .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, ' ')\n    .replace(/<nav[^>]*>[\\s\\S]*?<\\/nav>/gi, ' ')\n    .replace(/<footer[^>]*>[\\s\\S]*?<\\/footer>/gi, ' ')\n    .replace(/<header[^>]*>[\\s\\S]*?<\\/header>/gi, ' ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&[a-z]+;/gi, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  if (cleaned.length < 100) {\n    return [{ json: { status: 'error', message: 'Content too short after cleaning', url: url } }];\n  }\n\n  const sentences = cleaned.split(/(?<=[.!?])\\s+/).filter(s => s.length > 15);\n\n  if (sentences.length < 5) {\n    return [{ json: { status: 'error', message: 'Not enough sentences extracted', url: url, sentence_count: sentences.length } }];\n  }\n\n  const chunks = [];\n  const chunkMaxChars = 600;\n  const overlapChars = 80;\n  let currentChunk = '';\n\n  for (const sentence of sentences) {\n    if ((currentChunk + ' ' + sentence).length > chunkMaxChars && currentChunk.length > 0) {\n      chunks.push(currentChunk.trim());\n      const words = currentChunk.split(' ');\n      const overlapWords = words.slice(-Math.max(1, Math.floor(overlapChars / 5)));\n      currentChunk = overlapWords.join(' ') + ' ' + sentence;\n    } else {\n      currentChunk += (currentChunk ? ' ' : '') + sentence;\n    }\n  }\n  if (currentChunk.trim()) chunks.push(currentChunk.trim());\n\n  if (chunks.length < 3) {\n    return [{ json: { status: 'error', message: 'Not enough chunks generated', url: url, chunk_count: chunks.length } }];\n  }\n\n  return [{\n    json: {\n      status: 'ok',\n      source_url: url,\n      total_chunks: chunks.length,\n      chunks: chunks.map((text, i) => ({\n        chunk_index: i,\n        text: text\n      }))\n    }\n  }];\n} catch (err) {\n  return [{ json: { status: 'error', message: err.message, url: url } }];\n}"
+        },
+        "id": "b1c2d3e4-2222-4000-b000-000000000002",
+        "name": "FetchAndFormat",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [220, 0]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            { "node": "FetchAndFormat", "type": "main", "index": 0 }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
+]

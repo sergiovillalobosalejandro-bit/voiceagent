@@ -1,0 +1,76 @@
+[
+  {
+    "id": "FnT8kMqR4sL5vWy3",
+    "name": "FinBot - TTS (Text to Speech)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "tts",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "c1d2e3f4-1111-4000-c000-000000000001",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [0, 0],
+        "webhookId": "finbot-tts-webhook"
+      },
+      {
+        "parameters": {
+          "resource": "audio",
+          "operation": "create",
+          "model": "tts-1",
+          "input": "={{ $json.text }}",
+          "options": {
+            "voice": "={{ $json.voice || 'alloy' }}",
+            "speed": "={{ $json.speed || 1.0 }}"
+          }
+        },
+        "id": "c1d2e3f4-2222-4000-c000-000000000002",
+        "name": "OpenAI TTS",
+        "type": "n8n-nodes-base.openAi",
+        "typeVersion": 1,
+        "position": [220, 0],
+        "credentials": {
+          "openAiApi": {
+            "id": "OwUNEfHMuiWCkuOQ",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "binary",
+          "responseBinaryPropertyName": "data",
+          "options": {}
+        },
+        "id": "c1d2e3f4-3333-4000-c000-000000000003",
+        "name": "Respond with Audio",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [440, 0]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            { "node": "OpenAI TTS", "type": "main", "index": 0 }
+          ]
+        ]
+      },
+      "OpenAI TTS": {
+        "main": [
+          [
+            { "node": "Respond with Audio", "type": "main", "index": 0 }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
+]
