@@ -27,7 +27,7 @@ function App() {
     if (messages.length === 0) {
       setMessages([{
         role: "assistant",
-        content: "Despierta, samurai. Preguntame sobre instrumentos, afinacion o teoria musical. What do you need?",
+        content: "Bienvenido a SoundBot. Preguntame sobre instrumentos, afinacion o teoria musical. / Welcome to SoundBot. Ask me about instruments, tuning, or music theory.",
         tool_used: null,
         cache_hit: false,
       }]);
