@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const SESSION_ID =
   "finbot-session-" + Math.random().toString(36).slice(2, 9);
 
