@@ -87,8 +87,7 @@ REALTIME_CACHE_BYPASS_PATTERNS = [
 ]
 
 MUSIC_LOOKUP_KEYWORDS = (
-    "afinacion", "tuning", "frecuencia", "frequency",
-    "instrumento", "instrument",
+    "afinacion de", "tuning of", "tuning for", "afinacion del", "afinacion para",
 )
 
 
@@ -136,10 +135,14 @@ def is_cacheable_query(user_message: str) -> bool:
 
 def should_force_music_lookup(user_message: str) -> bool:
     normalized = _normalize_text(user_message)
-    return any(token in normalized for token in MUSIC_LOOKUP_KEYWORDS)
+    has_phrase = any(token in normalized for token in MUSIC_LOOKUP_KEYWORDS)
+    if not has_phrase:
+        return False
+    inst = detect_instrument_name(user_message)
+    return inst is not None
 
 
-def detect_instrument_name(user_message: str) -> str:
+def detect_instrument_name(user_message: str):
     normalized = _normalize_text(user_message)
     instruments = ["guitar", "guitarra", "piano", "violin", "bass", "bajo",
                    "drums", "bateria", "flute", "flauta", "saxophone", "saxofon",
@@ -147,7 +150,7 @@ def detect_instrument_name(user_message: str) -> str:
     for inst in instruments:
         if inst in normalized:
             return inst
-    return "guitar"
+    return None
 
 
 def format_music_answer(tool_result: dict, instrument: str, language: str) -> str:
@@ -208,13 +211,14 @@ def chat(session_id: str, user_message: str, image_base64: Optional[str] = None)
 
     if not image_base64 and should_force_music_lookup(normalized_message):
         instrument = detect_instrument_name(normalized_message)
-        tool_result = execute_tool(
-            "instrument_info",
-            {"instrument_name": instrument},
-        )
-        assistant_message = format_music_answer(tool_result, instrument, language)
-        add_to_memory(session_id, "assistant", assistant_message)
-        return assistant_message, language, "instrument_info", False
+        if instrument:
+            tool_result = execute_tool(
+                "instrument_info",
+                {"instrument_name": instrument},
+            )
+            assistant_message = format_music_answer(tool_result, instrument, language)
+            add_to_memory(session_id, "assistant", assistant_message)
+            return assistant_message, language, "instrument_info", False
 
     if can_use_cache:
         cached = check_cache(normalized_message)
