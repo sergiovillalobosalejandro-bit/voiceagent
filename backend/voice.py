@@ -4,10 +4,14 @@ import os
 import math
 import struct
 import wave
+import threading
+import logging
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
+logger = logging.getLogger("voice")
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
@@ -37,48 +41,68 @@ def transcribe_audio(audio_bytes: bytes, filename: str = "audio.webm") -> str:
     return transcript.strip()
 
 
-async def _synthesize_async(text: str, voice: str) -> bytes:
+def _tts_edge(text: str, voice: str) -> bytes:
     import ssl
-
     import aiohttp
     import edge_tts
+
+    edge_voice = VOICE_MAP.get(voice, "en-US-JennyNeural")
 
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
     connector = aiohttp.TCPConnector(ssl=ssl_context)
 
-    try:
-        edge_voice = VOICE_MAP.get(voice, "en-US-JennyNeural")
+    async def _stream():
         try:
-            communicate = edge_tts.Communicate(text, edge_voice, connector=connector)
-        except TypeError:
-            communicate = edge_tts.Communicate(text, edge_voice)
+            try:
+                communicate = edge_tts.Communicate(text, edge_voice, connector=connector)
+            except TypeError:
+                communicate = edge_tts.Communicate(text, edge_voice)
+            audio_data = b""
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_data += chunk["data"]
+            return audio_data
+        finally:
+            await connector.close()
 
-        audio_data = b""
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_data += chunk["data"]
-        return audio_data
-    finally:
-        await connector.close()
+    return asyncio.run(_stream())
+
+
+def _tts_gtts(text: str, lang: str) -> bytes:
+    from gtts import gTTS
+    mp3_buffer = io.BytesIO()
+    tts = gTTS(text=text, lang=lang, slow=False)
+    tts.write_to_fp(mp3_buffer)
+    return mp3_buffer.getvalue()
 
 
 def synthesize_speech(text: str, voice: str = "alloy") -> bytes:
-    try:
-        return asyncio.run(_synthesize_async(text, voice))
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
+    result = {"data": None}
+
+    def _run():
         try:
-            return loop.run_until_complete(_synthesize_async(text, voice))
-        finally:
-            loop.close()
-    except Exception:
+            result["data"] = _tts_edge(text, voice)
+        except Exception as e:
+            logger.warning(f"Edge TTS failed: {e}")
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    t.join(timeout=15)
+
+    if result["data"]:
+        return result["data"]
+
+    try:
+        lang = "es" if any(c in text for c in "áéíóúüñÁÉÍÓÚÜÑ") else "en"
+        return _tts_gtts(text, lang)
+    except Exception as e:
+        logger.warning(f"gTTS failed: {e}")
         return _build_fallback_audio(text)
 
 
 def _build_fallback_audio(text: str) -> bytes:
-    # Fallback tone to keep the audio contract available when TTS providers fail.
     sample_rate = 16000
     duration_sec = max(1.0, min(3.0, len(text) / 60.0))
     frequency = 440.0
