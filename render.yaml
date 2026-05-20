@@ -8,6 +8,8 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /health
+    # El modelo tarda en cargar; evita marcar el deploy como fallido demasiado pronto
+    healthCheckInitialDelaySeconds: 120
     envVars:
       - key: GROQ_API_KEY
         sync: false

@@ -1,19 +1,16 @@
-import os
-os.environ["HF_HUB_DISABLE_SSL_VERIFY"] = "1"
-
 import re
 import httpx
 import numpy as np
 import faiss
 from bs4 import BeautifulSoup
-from sentence_transformers import SentenceTransformer
 from typing import Optional, List
+
+from embeddings import get_encoder
 
 RAG_URL = "https://en.wikipedia.org/wiki/Musical_instrument"
 CHUNK_SIZE = 600
 CHUNK_OVERLAP = 60
 TOP_K = 3
-EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 FALLBACK_TEXT = """
 A musical instrument is a device created or adapted to make musical sounds. In principle, any object that
@@ -50,8 +47,6 @@ The flute is a woodwind instrument that produces sound from the flow of air acro
 is a single-reed woodwind with a conical brass body, invented in the 1840s by Adolphe Sax, prominent in jazz.
 The trumpet is a brass instrument with the highest register in its family, using three piston valves.
 """
-
-_model = SentenceTransformer(EMBEDDING_MODEL)
 
 _static_chunks: Optional[List[str]] = None
 _static_index: Optional[faiss.IndexFlatIP] = None
@@ -106,7 +101,7 @@ def _build_chunks(sentences: list, chunk_size: int, overlap: int) -> list:
 
 
 def _build_index(chunks: List[str]) -> faiss.IndexFlatIP:
-    embs = _model.encode(chunks, normalize_embeddings=True).astype(np.float32)
+    embs = get_encoder().encode(chunks, normalize_embeddings=True).astype(np.float32)
     dim = embs.shape[1]
     index = faiss.IndexFlatIP(dim)
     index.add(embs)
@@ -168,7 +163,7 @@ def query_rag(question: str) -> str:
     chunks = _dynamic_chunks if _dynamic_chunks is not None else _static_chunks
     index = _dynamic_index if _dynamic_index is not None else _static_index
 
-    q_emb = _model.encode([question], normalize_embeddings=True).astype(np.float32)
+    q_emb = get_encoder().encode([question], normalize_embeddings=True).astype(np.float32)
     scores, indices = index.search(q_emb, TOP_K)
 
     retrieved = []

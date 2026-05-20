@@ -1,14 +1,9 @@
-import os
-os.environ["HF_HUB_DISABLE_SSL_VERIFY"] = "1"
-
 import numpy as np
-from sentence_transformers import SentenceTransformer
 from typing import Optional, List
 
-CACHE_THRESHOLD = 0.90
-EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
+from embeddings import get_encoder
 
-_model = SentenceTransformer(EMBEDDING_MODEL)
+CACHE_THRESHOLD = 0.90
 
 FAQ_ENTRIES = [
     {
@@ -49,11 +44,11 @@ def _cosine_similarity(a, b):
 
 def _warm_cache():
     texts = [faq["question"] for faq in FAQ_ENTRIES]
-    return _model.encode(texts, normalize_embeddings=True)
+    return get_encoder().encode(texts, normalize_embeddings=True)
 
 
 def _get_embedding(text: str):
-    return _model.encode([text], normalize_embeddings=True)[0]
+    return get_encoder().encode([text], normalize_embeddings=True)[0]
 
 
 def check_cache(query: str) -> Optional[str]:
