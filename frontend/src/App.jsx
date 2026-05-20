@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://soundbot-backend.onrender.com";
 const SESSION_ID = "soundbot-" + Math.random().toString(36).slice(2, 9);
 
 function App() {
